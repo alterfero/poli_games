@@ -3,12 +3,11 @@ import json
 import random
 from collections import defaultdict
 import plotly.graph_objects as go
-from nltk.tokenize import sent_tokenize
-import nltk
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import pandas as pd
 import numpy as np
 import os
+import re
 
 st.set_page_config(
     page_title="Guess the word",
@@ -17,41 +16,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Download required NLTK data
-# Create a custom directory for NLTK data
-NLTK_DATA_DIR = os.path.join(os.getcwd(), "nltk_data")
-os.makedirs(NLTK_DATA_DIR, exist_ok=True)
-nltk.data.path.append(NLTK_DATA_DIR)
+def tokenize(text):
+    """
+    Simple tokenizer that:
+    - Splits on whitespace and punctuation
+    - Preserves contractions
+    - Converts to lowercase
+    - Removes special characters
+    """
+    # Clean the text
+    text = text.lower()
+    # Split on whitespace and punctuation, but preserve words with apostrophes
+    tokens = re.findall(r"[a-z0-9]+(?:[''][a-z]+)?", text)
+    return tokens
 
-@st.cache_resource
-def download_nltk_resources():
-    """Download all required NLTK resources"""
-    try:
-        resources = [
-            'punkt',
-            'averaged_perceptron_tagger',
-            'maxent_ne_chunker',
-            'words',
-            'tagsets',
-            'punkt_tab'
-        ]
-
-        for resource in resources:
-            try:
-                nltk.download(resource, download_dir=NLTK_DATA_DIR, quiet=True)
-                st.write(f"Successfully downloaded {resource}")
-            except Exception as e:
-                st.write(f"Error downloading {resource}: {str(e)}")
-
-    except Exception as e:
-        st.write(f"Error in download_nltk_resources: {str(e)}")
-
-    # Verify the downloads
-    st.write("NLTK data path:", nltk.data.path)
-    st.write("Contents of NLTK_DATA_DIR:", os.listdir(NLTK_DATA_DIR))
-
-download_nltk_resources()
-
+def split_into_sentences(text):
+    """
+    Split text into sentences using regex.
+    Handles common sentence endings (., !, ?) and common abbreviations
+    """
+    # Add spaces around punctuation marks for easier splitting
+    text = re.sub(r'([.!?])', r' \1 ', text)
+    # Handle common abbreviations (Mr., Dr., etc.)
+    text = re.sub(r'\s+([Mm]r|[Dd]r|[Pp]rof|[Mm]rs|[Mm]s|[Jj]r|[Ss]r|[Ss]t)\.\s+', r' \1$$$', text)
+    # Split on sentence endings
+    sentences = re.split(r'\s*[.!?]\s+', text)
+    # Clean up and restore abbreviations
+    sentences = [s.strip().replace('$$$', '.') for s in sentences if s.strip()]
+    return sentences
 
 wrong_answer_prefixes = [
         "Ah... the right word was ",
@@ -183,9 +175,8 @@ def analyze_emotions_across_corpus(corpus_sentences, keyword, replacement_word):
 def get_sentences_for_keyword(corpus, keyword):
     """Find all sentences containing the given keyword"""
     sentences = []
-
     for speech in corpus['content']:
-        for sentence in sent_tokenize(speech['content']):
+        for sentence in split_into_sentences(speech['content']):
             if keyword.lower() in sentence.lower():
                 sentences.append({
                     'sentence': sentence,
