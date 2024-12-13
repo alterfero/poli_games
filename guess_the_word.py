@@ -147,7 +147,7 @@ def analyze_emotions_across_corpus(corpus_sentences, keyword, replacement_word):
     # Create chart
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value= - (avg_modified - avg_original),
+        value = - (avg_modified - avg_original),
         domain={'x': [0, 1], 'y': [0, 1]},
         gauge={
             'axis': {'range': [-1, 1]},
@@ -212,7 +212,7 @@ def get_unused_sentence(used_sentences, corpus, keywords):
 
 
 def main():
-    st.title("Guess the word and deal with the consequences")
+    st.title("Guess the word")
 
     # Initialize session state
     if 'score' not in st.session_state:
@@ -230,7 +230,7 @@ def main():
     if 'submitted' not in st.session_state:
         st.session_state.submitted = False
 
-    keywords = ['economy', 'border', 'death penalty', 'drugs', 'migrants', 'love', 'disaster']
+    keywords = ['economy', 'border', 'death penalty', 'drugs', 'migrants', 'love', 'disaster', 'tariffs']
 
     # Game progress
     if st.session_state.corpus:
@@ -300,9 +300,15 @@ def main():
                 colw.success("Correct!")
             else:
                 colw.markdown("#### " + random.choice(wrong_answer_prefixes) + '"{}"'.format(st.session_state.current_sentence_data['keyword']))
-                # Analyze impact across corpus
+                # Analyze impact on all sentences with the keyword
+                # impact_analysis = analyze_emotions_across_corpus(
+                #     st.session_state.used_sentences + [st.session_state.current_sentence_data],
+                #     st.session_state.current_sentence_data['keyword'],
+                #     user_guess
+                # )
+                # Amalyze impact just on the current sentence
                 impact_analysis = analyze_emotions_across_corpus(
-                    st.session_state.used_sentences + [st.session_state.current_sentence_data],
+                    [st.session_state.current_sentence_data],
                     st.session_state.current_sentence_data['keyword'],
                     user_guess
                 )
@@ -315,7 +321,7 @@ def main():
 
                 if other_sentences:
                     example = random.choice(other_sentences)
-                    colw.markdown("Looks like you also said:")
+                    colw.markdown("The author would also have said:")
                     players_sentence = example['sentence'].replace(
                             st.session_state.current_sentence_data['keyword'],
                             user_guess
