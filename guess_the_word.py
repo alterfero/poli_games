@@ -8,6 +8,7 @@ import nltk
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import pandas as pd
 import numpy as np
+import os
 
 st.set_page_config(
     page_title="Guess the word",
@@ -17,7 +18,40 @@ st.set_page_config(
 )
 
 # Download required NLTK data
-nltk.download('punkt')
+# Create a custom directory for NLTK data
+NLTK_DATA_DIR = os.path.join(os.getcwd(), "nltk_data")
+os.makedirs(NLTK_DATA_DIR, exist_ok=True)
+nltk.data.path.append(NLTK_DATA_DIR)
+
+@st.cache_resource
+def download_nltk_resources():
+    """Download all required NLTK resources"""
+    try:
+        resources = [
+            'punkt',
+            'averaged_perceptron_tagger',
+            'maxent_ne_chunker',
+            'words',
+            'tagsets',
+            'punkt_tab'
+        ]
+
+        for resource in resources:
+            try:
+                nltk.download(resource, download_dir=NLTK_DATA_DIR, quiet=True)
+                st.write(f"Successfully downloaded {resource}")
+            except Exception as e:
+                st.write(f"Error downloading {resource}: {str(e)}")
+
+    except Exception as e:
+        st.write(f"Error in download_nltk_resources: {str(e)}")
+
+    # Verify the downloads
+    st.write("NLTK data path:", nltk.data.path)
+    st.write("Contents of NLTK_DATA_DIR:", os.listdir(NLTK_DATA_DIR))
+
+download_nltk_resources()
+
 
 wrong_answer_prefixes = [
         "Ah... the right word was ",
