@@ -52,6 +52,7 @@ requests==2.32.3
 rich==13.9.4
 rpds-py==0.22.3
 safetensors==0.4.5
+scikit-learn==1.6.0
 scipy==1.13.1
 shellingham==1.5.4
 six==1.17.0
@@ -64,6 +65,7 @@ streamlit==1.41.0
 tenacity==9.0.0
 textblob==0.18.0.post0
 thinc==8.3.2
+threadpoolctl==3.5.0
 tokenizers==0.21.0
 toml==0.10.2
 tornado==6.4.2
