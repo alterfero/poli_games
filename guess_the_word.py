@@ -137,11 +137,11 @@ def measure_corpus_similarity(corpus, new_sentence, verbose=False):
     vectorizer = TfidfVectorizer(
         tokenizer=custom_tokenizer,
         lowercase=True,  # Convert everything to lowercase
-        stop_words=None,  # Keep all words
+        stop_words='english',
         token_pattern=None,  # Use our custom tokenizer instead
         min_df=1,  # Keep terms that appear at least once
         max_df=1.0,  # Keep all terms regardless of frequency
-        ngram_range=(1, 2),  # Use only unigrams
+        ngram_range=(1, 2),
         smooth_idf=True,  # Apply smoothing to IDF weights
     )
 
@@ -521,7 +521,7 @@ def get_sarcastic_comment(dem_score, maga_score):
 
 
 def main():
-    st.title("Guess the word")
+    st.title("Guess the word: Donald Trump at Meet the Press edition.")
 
     # Initialize session state
     if 'score' not in st.session_state:
@@ -561,7 +561,8 @@ def main():
                 c = json.load(f)
                 st.session_state["democrat_corpus"] += split_into_sentences(c["content"][0]["content"])
 
-    keywords = ['economy', 'border', 'death penalty', 'drugs', 'migrant', 'love', 'disaster', 'tariff', "vaccine"]
+    keywords = ['economy', 'border', 'death penalty', 'drugs', 'migrant', 'disaster', 'tariff', "vaccine",
+                "Project 2025"]
 
     # Game progress
     if st.session_state.corpus:
@@ -633,25 +634,33 @@ def main():
                 colw.markdown("#### " + random.choice(wrong_answer_prefixes) + '"{}"'.format(st.session_state.current_sentence_data['keyword']))
 
 
+                # impact_analysis, metrics = measure_corpus_similarity(st.session_state["trump_corpus"],
+                #                                                      st.session_state.current_sentence_data['sentence']
+                #                                                      .replace( st.session_state.current_sentence_data['keyword'], user_guess)
+                #                                                      )
+                # demo_analysis, demo_metrics = measure_corpus_similarity(st.session_state["democrat_corpus"],
+                #                                                      st.session_state.current_sentence_data['sentence']
+                #                                                      .replace( st.session_state.current_sentence_data['keyword'], user_guess)
+                #                                                      )
+
                 impact_analysis, metrics = measure_corpus_similarity(st.session_state["trump_corpus"],
-                                                                     st.session_state.current_sentence_data['sentence']
-                                                                     .replace( st.session_state.current_sentence_data['keyword'], user_guess)
+                                                                     user_guess
                                                                      )
-                #st.write("trump metrics: {}".format(metrics))
                 demo_analysis, demo_metrics = measure_corpus_similarity(st.session_state["democrat_corpus"],
-                                                                     st.session_state.current_sentence_data['sentence']
-                                                                     .replace( st.session_state.current_sentence_data['keyword'], user_guess)
-                                                                     )
-                #st.write("democrat metrics: {}".format(demo_metrics))
+                                                                        user_guess
+                                                                        )
+
 
                 # show graph
-
-                fig = plot_corpus_similarity(metrics["max_similarity"], demo_metrics["max_similarity"])
+                st.divider()
+                st.markdown("#### How does your word change the political position?")
+                magam = metrics["max_similarity"] - 0.05
+                demom = demo_metrics["max_similarity"] + 0.05
+                fig = plot_corpus_similarity(magam, demom)
                 st.plotly_chart(fig, use_container_width=True)
 
-
                 # comment
-                comment = get_sarcastic_comment(demo_metrics["max_similarity"], metrics["max_similarity"])
+                comment = get_sarcastic_comment(demom, magam)
                 st.markdown("#### ***{}***".format(comment))
 
 
@@ -664,10 +673,13 @@ def main():
 
                 if other_sentences:
                     example = random.choice(other_sentences)
-                    colw.markdown("With this change, he would also have said: ")
+                    colw.markdown("With your change, he would also have said: ")
                     players_sentence = example['sentence'].replace(
                             st.session_state.current_sentence_data['keyword'],
                             user_guess
+                        ).replace(
+                            st.session_state.current_sentence_data['keyword'].capitalize(),
+                            user_guess.capitalize()
                         )
                     colw.markdown("> #### {}".format(players_sentence))
 
@@ -684,7 +696,19 @@ def main():
                 st.session_state.current_sentence_data = None
                 st.session_state.submitted = False
                 st.rerun()
-
+    with st.popover("i"):
+        st.markdown("""
+        The software chooses a random occurrence of one of the key words in the interview and asks to guess it. 
+        When this answer is wrong, a distance is computed between the new sentence and two other corpora: Donald Trump 2024
+         rallies on one hand, and Joe Biden + Kamala Harris 2024 rallies on the other. Distances are computed with 
+         a TF-IDF algorithm, relying only on word frequencies, so results can be surprising but well, accuracy is not 
+         the value prop here. The results is displayed on a bar.
+         The closest Trump's sentence from his Duluth Rally is chosen and displayed as well. I hope you'll have fun 
+         and that you'll enjoy the non-linear corpus discovery process induced by this kind of games.
+         
+         The software is open source. 
+         
+         You can contact me with ideas or requests at alterfero@gmail.com""")
 
 if __name__ == "__main__":
     main()
