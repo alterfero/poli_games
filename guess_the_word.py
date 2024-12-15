@@ -1,4 +1,17 @@
-import os
+# Copyright (C) 2024 Sebastien CHRISTIAN
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be fun and useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import streamlit as st
 import json
@@ -625,69 +638,67 @@ def main():
         # Submit button
         if colq.button("Submit", key=f"submit_{st.session_state.current_round}") and not st.session_state.submitted:
             st.session_state.submitted = True
-
-            # Check if guess is correct
-            if user_guess.lower() == st.session_state.current_sentence_data['keyword'].lower():
-                st.session_state.score += 10
-                colw.success("Correct!")
-            else:
-                colw.markdown("#### " + random.choice(wrong_answer_prefixes) + '"{}"'.format(st.session_state.current_sentence_data['keyword']))
-
-
-                # impact_analysis, metrics = measure_corpus_similarity(st.session_state["trump_corpus"],
-                #                                                      st.session_state.current_sentence_data['sentence']
-                #                                                      .replace( st.session_state.current_sentence_data['keyword'], user_guess)
-                #                                                      )
-                # demo_analysis, demo_metrics = measure_corpus_similarity(st.session_state["democrat_corpus"],
-                #                                                      st.session_state.current_sentence_data['sentence']
-                #                                                      .replace( st.session_state.current_sentence_data['keyword'], user_guess)
-                #                                                      )
-
-                impact_analysis, metrics = measure_corpus_similarity(st.session_state["trump_corpus"],
-                                                                     user_guess
-                                                                     )
-                demo_analysis, demo_metrics = measure_corpus_similarity(st.session_state["democrat_corpus"],
-                                                                        user_guess
-                                                                        )
+            if user_guess != "":
+                # Check if guess is correct
+                if user_guess.lower() == st.session_state.current_sentence_data['keyword'].lower():
+                    st.session_state.score += 10
+                    colw.success("Correct!")
+                else:
+                    colw.markdown("#### " + random.choice(wrong_answer_prefixes) + '"{}"'.format(st.session_state.current_sentence_data['keyword']))
 
 
-                # show graph
-                st.divider()
-                st.markdown("#### How does your word change the political position?")
-                magam = metrics["max_similarity"] - 0.05
-                demom = demo_metrics["max_similarity"] + 0.05
-                fig = plot_corpus_similarity(magam, demom)
-                st.plotly_chart(fig, use_container_width=True)
+                    # impact_analysis, metrics = measure_corpus_similarity(st.session_state["trump_corpus"],
+                    #                                                      st.session_state.current_sentence_data['sentence']
+                    #                                                      .replace( st.session_state.current_sentence_data['keyword'], user_guess)
+                    #                                                      )
+                    # demo_analysis, demo_metrics = measure_corpus_similarity(st.session_state["democrat_corpus"],
+                    #                                                      st.session_state.current_sentence_data['sentence']
+                    #                                                      .replace( st.session_state.current_sentence_data['keyword'], user_guess)
+                    #                                                      )
 
-                # comment
-                comment = get_sarcastic_comment(demom, magam)
-                st.markdown("#### ***{}***".format(comment))
+                    impact_analysis, metrics = measure_corpus_similarity(st.session_state["trump_corpus"],
+                                                                         user_guess
+                                                                         )
+                    demo_analysis, demo_metrics = measure_corpus_similarity(st.session_state["democrat_corpus"],
+                                                                            user_guess
+                                                                            )
+
+
+                    # show comment and graph
+                    magam = metrics["max_similarity"] - 0.05
+                    demom = demo_metrics["max_similarity"] + 0.05
+                    comment = get_sarcastic_comment(demom, magam)
+                    st.markdown("#### How does your word change the political position?")
+                    st.markdown("#### {}".format(comment))
+
+                    fig = plot_corpus_similarity(magam, demom)
+                    st.plotly_chart(fig, use_container_width=True)
 
 
 
-                # Show example of impact in another sentence
-                other_sentences = get_sentences_for_keyword(st.session_state.corpus,
-                                                            st.session_state.current_sentence_data['keyword'])
-                other_sentences = [s for s in other_sentences
-                                   if s['sentence'] != st.session_state.current_sentence_data['sentence']]
+                    # Show example of impact in another sentence
+                    other_sentences = get_sentences_for_keyword(st.session_state.corpus,
+                                                                st.session_state.current_sentence_data['keyword'])
+                    other_sentences = [s for s in other_sentences
+                                       if s['sentence'] != st.session_state.current_sentence_data['sentence']]
 
-                if other_sentences:
-                    example = random.choice(other_sentences)
-                    colw.markdown("With your change, he would also have said: ")
-                    players_sentence = example['sentence'].replace(
-                            st.session_state.current_sentence_data['keyword'],
-                            user_guess
-                        ).replace(
-                            st.session_state.current_sentence_data['keyword'].capitalize(),
-                            user_guess.capitalize()
-                        )
-                    colw.markdown("> #### {}".format(players_sentence))
+                    if other_sentences:
+                        example = random.choice(other_sentences)
+                        colw.markdown("##### With your change, he would also have said: ")
+                        players_sentence = example['sentence'].replace(
+                                st.session_state.current_sentence_data['keyword'],
+                                user_guess
+                            ).replace(
+                                st.session_state.current_sentence_data['keyword'].capitalize(),
+                                user_guess.capitalize()
+                            )
+                        colw.markdown("> #### {}".format(players_sentence))
 
-                colw.markdown("It reminds me when during a 2024 rally he said")
-                colw.markdown("> #### {}".format(metrics["most_similar_sentence"]))
+                    colw.markdown("##### It reminds me when during a 2024 rally he said")
+                    colw.markdown("> #### {}".format(metrics["most_similar_sentence"]))
 
-            # Add current sentence to used list
-            st.session_state.used_sentences.append(st.session_state.current_sentence_data)
+                # Add current sentence to used list
+                st.session_state.used_sentences.append(st.session_state.current_sentence_data)
 
         # Next round button
         if st.session_state.submitted:
