@@ -235,12 +235,16 @@ def plot_corpus_similarity(corpus1_sim, corpus2_sim, corpus1_name="MAGA", corpus
     """
 
     # Convert to percentages
-    sim1 = round(corpus1_sim * 100, 1)
-    sim2 = round(corpus2_sim * 100, 1)
+    sim1 = round(corpus2_sim * 100, 1)
+    sim2 = round(corpus1_sim * 100, 1)
 
     # Calculate relative position (weighted average)
     total_sim = sim1 + sim2
     position = 50 if total_sim == 0 else (sim2 / total_sim) * 100
+    if position < 5:
+        position = 5
+    if position > 95:
+        position = 95
 
     # Create the figure
     fig = go.Figure()
@@ -251,7 +255,7 @@ def plot_corpus_similarity(corpus1_sim, corpus2_sim, corpus1_name="MAGA", corpus
         y=[0, 0],
         mode='lines',
         line=dict(
-            color='rgb(239, 68, 68)',  # Blue (239, 68, 68)
+            color='rgb(59, 130, 246)',  # Red
             width=20,
         ),
         hoverinfo='skip'
@@ -263,7 +267,7 @@ def plot_corpus_similarity(corpus1_sim, corpus2_sim, corpus1_name="MAGA", corpus
         y=[0, 0],
         mode='lines',
         line=dict(
-            color='rgb(59, 130, 246)',  # Red
+            color='rgb(239, 68, 68)',  # Blue
             width=20,
         ),
         hoverinfo='skip'
@@ -302,14 +306,14 @@ def plot_corpus_similarity(corpus1_sim, corpus2_sim, corpus1_name="MAGA", corpus
     fig.add_annotation(
         x=25,
         y=-0.5,
-        text=f"{corpus1_name}",
+        text=f"{corpus2_name}",
         showarrow=False,
         font=dict(size=20)
     )
     fig.add_annotation(
         x=75,
         y=-0.5,
-        text=f"{corpus2_name}",
+        text=f"{corpus1_name}",
         showarrow=False,
         font=dict(size=20)
     )
@@ -667,9 +671,10 @@ def main():
                     # show comment and graph
                     magam = metrics["max_similarity"] - 0.05
                     demom = demo_metrics["max_similarity"] + 0.05
-                    comment = get_sarcastic_comment(demom, magam)
+                    #st.write("magam: {}, demom: {}".format(magam, demom))
+                    #comment = get_sarcastic_comment(demom, magam)
                     st.markdown("#### How does your word change the political position?")
-                    st.markdown("#### {}".format(comment))
+                    #st.markdown("#### {}".format(comment))
 
                     fig = plot_corpus_similarity(magam, demom)
                     st.plotly_chart(fig, use_container_width=True)
@@ -695,7 +700,7 @@ def main():
                         colw.markdown("> #### {}".format(players_sentence))
 
                     colw.markdown("##### It reminds me when during a 2024 rally he said")
-                    colw.markdown("> #### {}".format(metrics["most_similar_sentence"]))
+                    colw.markdown('> #### "{}"'.format(metrics["most_similar_sentence"]))
 
                 # Add current sentence to used list
                 st.session_state.used_sentences.append(st.session_state.current_sentence_data)
