@@ -699,8 +699,9 @@ def main():
                             )
                         colw.markdown("> #### {}".format(players_sentence))
 
-                    colw.markdown("##### It reminds me when during a 2024 rally he said")
-                    colw.markdown('> #### "{}"'.format(metrics["most_similar_sentence"]))
+                    if "Duluth" not in metrics["most_similar_sentence"]:
+                        colw.markdown("##### It reminds me when during a 2024 rally he said")
+                        colw.markdown('> #### "{}"'.format(metrics["most_similar_sentence"]))
 
                 # Add current sentence to used list
                 st.session_state.used_sentences.append(st.session_state.current_sentence_data)
